@@ -14,13 +14,26 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-# Set MLflow tracking from environment variables
-os.environ["MLFLOW_TRACKING_URI"] = os.getenv("MLFLOW_TRACKING_URI", "")
-os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME", "")
-os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD", "")
+warnings.filterwarnings('ignore')
 
-# Set MLflow tracking URI
-mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", ""))
+
+
+
+mlflow.set_tracking_uri("databricks")
+
+from dotenv import load_dotenv
+load_dotenv()
+
+# get Databricks username from environment
+DATABRICKS_USERNAME = os.getenv("DATABRICKS_USERNAME")
+
+# set experiment with absolute path 
+experiment_path = f"/Users/{DATABRICKS_USERNAME}/german-credit"
+mlflow.set_experiment(experiment_path)
+print(f"Using experiment: {experiment_path}")
+
+
+os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "false"
 
 
 print("Starting evaluation...")
