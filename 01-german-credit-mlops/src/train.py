@@ -8,14 +8,32 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import roc_auc_score, accuracy_score, confusion_matrix, classification_report
 from mlflow.models import infer_signature
-from urllib.parse import urlparse
-from dotenv import load_dotenv
 import warnings
 import json
 import matplotlib.pyplot as plt
 
-load_dotenv()
 warnings.filterwarnings('ignore')
+
+
+
+
+mlflow.set_tracking_uri("databricks")
+
+from dotenv import load_dotenv
+load_dotenv()
+
+# get Databricks username from environment
+DATABRICKS_USERNAME = os.getenv("DATABRICKS_USERNAME")
+
+# set experiment with absolute path 
+experiment_path = f"/Users/{DATABRICKS_USERNAME}/german-credit"
+mlflow.set_experiment(experiment_path)
+print(f"Using experiment: {experiment_path}")
+
+
+os.environ["MLFLOW_ENABLE_SYSTEM_METRICS_LOGGING"] = "false"
+
+
 
 # Load parameters 
 with open("params.yaml", "r") as f:
@@ -23,13 +41,9 @@ with open("params.yaml", "r") as f:
 
 train_params = params["train"]
 
-# Set MLflow tracking URI 
-os.environ["MLFLOW_TRACKING_URI"] = os.getenv("MLFLOW_TRACKING_URI")
-os.environ["MLFLOW_TRACKING_USERNAME"] = os.getenv("MLFLOW_TRACKING_USERNAME")
-os.environ["MLFLOW_TRACKING_PASSWORD"] = os.getenv("MLFLOW_TRACKING_PASSWORD")
-mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI"))
 
-# Hyperparameter tuning
+
+
 def hyperparameter_tuning(X_train, y_train, param_grid, cv_folds=5):
     """Perform hyperparameter tuning with GridSearchCV"""
     rf = RandomForestClassifier(random_state=train_params["random_state"])
@@ -63,7 +77,6 @@ def train(data_path, model_path, random_state):
     X_test.to_csv("data/processed/X_test.csv", index=False)
     y_test.to_csv("data/processed/y_test.csv", index=False)
     
-    # Define hyperparameter grid
     param_grid = {
         "max_depth": [3, 5, 7, 10, None],
         "n_estimators": [3, 5, 10, 25, 50, 150],
@@ -103,12 +116,12 @@ def train(data_path, model_path, random_state):
     cm = confusion_matrix(y_test, y_pred)
     cr = classification_report(y_test, y_pred)
     
-    # Create models directory and save model locally FIRST
+    # Create models directory and save model locally
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     joblib.dump(best_model, model_path)
     print(f"Model saved to {model_path}")
     
-    # Start MLflow run to log all comparisons
+    # Start MLflow run on Databricks
     with mlflow.start_run(run_name="rf_hyperparameter_tuning"):
         # Log parameters
         mlflow.log_param("best_max_depth", best_params["max_depth"])
@@ -175,9 +188,8 @@ def train(data_path, model_path, random_state):
         signature = infer_signature(X_train, best_model.predict(X_train))
         mlflow.sklearn.log_model(best_model, "best_model", signature=signature)
         
-        print("All artifacts logged to MLflow!")
+        print("All artifacts logged to MLflow on Databricks!")
     
-    # Return results
     return {
         "best_params": best_params,
         "best_cv_score": best_score,

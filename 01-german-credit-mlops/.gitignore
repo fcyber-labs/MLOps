@@ -59,3 +59,11 @@ docs/_build/
 # PyBuilder
 target/
 
+
+
+# Databricks
+.databricks/
+
+# MLflow local files
+mlruns/
+mlflow.db
