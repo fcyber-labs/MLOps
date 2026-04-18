@@ -1,0 +1,35 @@
+stages:
+  preprocess:
+    cmd: python src/preprocess.py
+    deps:
+    - src/preprocess.py
+    - data/raw/german_credit_data_risk.csv
+    params:
+    - preprocess.input
+    - preprocess.output
+    outs:
+    - data/processed/features.csv
+
+  train:
+    cmd: python src/train.py
+    deps:
+    - src/train.py
+    - data/processed/features.csv
+    params:
+    - train.data
+    - train.model
+    - train.random_state
+    outs:
+    - models/model.pkl
+
+  evaluate:
+    cmd: python src/evaluate.py
+    deps:
+    - src/evaluate.py
+    - models/model.pkl
+    - data/processed/features.csv
+    metrics:
+    - reports/metrics.json
+    outs:
+    - reports/roc_curve.png
+

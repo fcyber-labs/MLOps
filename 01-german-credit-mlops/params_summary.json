@@ -1,0 +1,13 @@
+{
+  "best_params": {
+    "max_depth": 10,
+    "max_features": 4,
+    "n_estimators": 150
+  },
+  "best_cv_score": 0.7478996301604998,
+  "test_roc_auc": 0.734394506866417,
+  "test_accuracy": 0.732,
+  "n_features": 25,
+  "n_train_samples": 750,
+  "n_test_samples": 250
+}
